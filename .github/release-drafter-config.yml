@@ -15,7 +15,7 @@ autolabeler:
     branch:
       - '/feature-.+'
 categories:
-  - title: 'Breaking Changes'
+  - title: '🔥 Breaking Changes'
     labels:
       - 'breakingchange'
   - title: '🧪 Experimental Features'
@@ -32,7 +32,10 @@ categories:
       - 'bug'
       - 'BUG'
   - title: '🧰 Maintenance'
-    label: 'maintenance'
+    labels:
+      - 'maintenance'
+      - 'dependencies'
+      - 'testing'
 change-template: '- $TITLE (#$NUMBER)'
 exclude-labels:
   - 'skip-changelog'

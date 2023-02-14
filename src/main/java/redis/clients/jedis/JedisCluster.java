@@ -194,11 +194,16 @@ public class JedisCluster extends UnifiedJedis {
   // 下面两个方法可以用来获取集群拓扑 by kimmking 2023-02-14 15:07:54
 
   public Map<String, ConnectionPool> getClusterNodes() {
-    return ((ClusterCommandExecutor) executor).provider.getNodes();
+    return ((ClusterConnectionProvider) provider).getNodes();
   }
 
   public Connection getConnectionFromSlot(int slot) {
-    return ((ClusterCommandExecutor) executor).provider.getConnectionFromSlot(slot);
+    return ((ClusterConnectionProvider) provider).getConnectionFromSlot(slot);
+  }
+
+  @Override
+  public ClusterPipeline pipelined() {
+    return new ClusterPipeline((ClusterConnectionProvider) provider);
   }
 
   // 新加两个方法 by kimmking 2023-02-14 15:07:54

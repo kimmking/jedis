@@ -3512,6 +3512,24 @@ public class UnifiedJedis implements JedisCommands, JedisBinaryCommands,
   }
 
   @Override
+  public Map.Entry<AggregationResult, Map<String, Object>> ftProfileAggregate(String indexName,
+      FTProfileParams profileParams, AggregationBuilder aggr) {
+    return executeCommand(commandObjects.ftProfileAggregate(indexName, profileParams, aggr));
+  }
+
+  @Override
+  public Map.Entry<SearchResult, Map<String, Object>> ftProfileSearch(String indexName,
+      FTProfileParams profileParams, Query query) {
+    return executeCommand(commandObjects.ftProfileSearch(indexName, profileParams, query));
+  }
+
+  @Override
+  public Map.Entry<SearchResult, Map<String, Object>> ftProfileSearch(String indexName,
+      FTProfileParams profileParams, String query, FTSearchParams searchParams) {
+    return executeCommand(commandObjects.ftProfileSearch(indexName, profileParams, query, searchParams));
+  }
+
+  @Override
   public String ftDropIndex(String indexName) {
     return executeCommand(commandObjects.ftDropIndex(indexName));
   }
@@ -3654,6 +3672,11 @@ public class UnifiedJedis implements JedisCommands, JedisBinaryCommands,
   @Override
   public long ftSugLen(String key) {
     return executeCommand(commandObjects.ftSugLen(key));
+  }
+
+  @Override
+  public List<String> ftList() {
+    return executeCommand(commandObjects.ftList());
   }
   // RediSearch commands
 
@@ -4198,6 +4221,11 @@ public class UnifiedJedis implements JedisCommands, JedisBinaryCommands,
   }
 
   @Override
+  public long bfCard(String key) {
+    return executeCommand(commandObjects.bfCard(key));
+  }
+
+  @Override
   public Map<String, Object> bfInfo(String key) {
     return executeCommand(commandObjects.bfInfo(key));
   }
@@ -4510,6 +4538,18 @@ public class UnifiedJedis implements JedisCommands, JedisBinaryCommands,
     return executeCommand(commandObjects.graphConfigGet(configName));
   }
   // RedisGraph commands
+
+  public JedisBroadcast broadcast() {
+    return new JedisBroadcast(this);
+  }
+
+  public Object pipelined() {
+    if (provider == null) {
+      throw new IllegalStateException("It is not allowed to create Pipeline from this " + getClass());
+    }
+    Connection connection = provider.getConnection();
+    return new Pipeline(connection, true);
+  }
 
   public Object sendCommand(ProtocolCommand cmd) {
     return executeCommand(commandObjects.commandArguments(cmd));

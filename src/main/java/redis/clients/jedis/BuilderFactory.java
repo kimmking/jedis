@@ -3,8 +3,6 @@ package redis.clients.jedis;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.resps.StreamConsumerFullInfo;
@@ -837,7 +835,7 @@ public final class BuilderFactory {
   };
 
   /**
-   * Create a AccessControlUser object from the ACL GETUSER < > result
+   * Create a AccessControlUser object from the ACL GETUSER reply.
    */
   public static final Builder<AccessControlUser> ACCESS_CONTROL_USER = new Builder<AccessControlUser>() {
     @SuppressWarnings("unchecked")
@@ -1539,91 +1537,6 @@ public final class BuilderFactory {
     }
   };
 
-  public static final Builder<Class<?>> JSON_TYPE = new Builder<Class<?>>() {
-    @Override
-    public Class<?> build(Object data) {
-      if (data == null) return null;
-      String str = STRING.build(data);
-      switch (str) {
-        case "null":
-          return null;
-        case "boolean":
-          return boolean.class;
-        case "integer":
-          return int.class;
-        case "number":
-          return float.class;
-        case "string":
-          return String.class;
-        case "object":
-          return Object.class;
-        case "array":
-          return List.class;
-        default:
-          throw new JedisException("Unknown type: " + str);
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "Class<?>";
-    }
-  };
-
-  public static final Builder<List<Class<?>>> JSON_TYPE_LIST = new Builder<List<Class<?>>>() {
-    @Override
-    public List<Class<?>> build(Object data) {
-      List<Object> list = (List<Object>) data;
-      List<Class<?>> classes = new ArrayList<>(list.size());
-      for (Object elem : list) {
-        try {
-          classes.add(JSON_TYPE.build(elem));
-        } catch (JedisException je) {
-          classes.add(null);
-        }
-      }
-      return classes;
-    }
-  };
-
-  public static final Builder<Object> JSON_OBJECT = new Builder<Object>() {
-    @Override
-    public Object build(Object data) {
-      if (data == null) return null;
-
-      if (!(data instanceof byte[])) return data;
-
-      String str = STRING.build(data);
-      if (str.charAt(0) == '{') {
-        try {
-          return new JSONObject(str);
-        } catch (Exception ex) { }
-      } else if (str.charAt(0) == '[') {
-        try {
-          return new JSONArray(str);
-        } catch (Exception ex) { }
-      }
-      return str;
-    }
-  };
-
-  public static final Builder<JSONArray> JSON_ARRAY = new Builder<JSONArray>() {
-    @Override
-    public JSONArray build(Object data) {
-      if (data == null) return null;
-      return new JSONArray(STRING.build(data));
-    }
-  };
-
-  public static final Builder<List<JSONArray>> JSON_ARRAY_LIST = new Builder<List<JSONArray>>() {
-    @Override
-    public List<JSONArray> build(Object data) {
-      if (data == null) return null;
-      List<Object> list = (List<Object>) data;
-      return list.stream().map(o -> JSON_ARRAY.build(o)).collect(Collectors.toList());
-    }
-  };
-
   public static final Builder<List<List<String>>> STRING_LIST_LIST = new Builder<List<List<String>>>() {
     @Override
     @SuppressWarnings("unchecked")
@@ -1652,118 +1565,11 @@ public final class BuilderFactory {
     }
   };
 
-  public static final Builder<AggregationResult> SEARCH_AGGREGATION_RESULT = new Builder<AggregationResult>() {
-    @Override
-    public AggregationResult build(Object data) {
-      return new AggregationResult(data);
-    }
-  };
-
-  public static final Builder<AggregationResult> SEARCH_AGGREGATION_RESULT_WITH_CURSOR = new Builder<AggregationResult>() {
-    @Override
-    public AggregationResult build(Object data) {
-      List<Object> list = (List<Object>) data;
-      return new AggregationResult(list.get(0), (long) list.get(1));
-    }
-  };
-
-  public static final Builder<Map<String, List<String>>> SEARCH_SYNONYM_GROUPS = new Builder<Map<String, List<String>>>() {
-    @Override
-    public Map<String, List<String>> build(Object data) {
-      List<Object> list = (List<Object>) data;
-      Map<String, List<String>> dump = new HashMap<>(list.size() / 2, 1f);
-      for (int i = 0; i < list.size(); i += 2) {
-        dump.put(STRING.build(list.get(i)), STRING_LIST.build(list.get(i + 1)));
-      }
-      return dump;
-    }
-  };
-
-  public static final Builder<Map<String, Map<String, Double>>> SEARCH_SPELLCHECK_RESPONSE
-      = new Builder<Map<String, Map<String, Double>>>() {
-
-    private final String TERM = "TERM";
-
-    @Override
-    public Map<String, Map<String, Double>> build(Object data) {
-      List<Object> rawTerms = (List<Object>) data;
-      Map<String, Map<String, Double>> returnTerms = new LinkedHashMap<>(rawTerms.size());
-
-      for (Object rawTerm : rawTerms) {
-        List<Object> rawElements = (List<Object>) rawTerm;
-
-        String header = STRING.build(rawElements.get(0));
-        if (!TERM.equals(header)) {
-          throw new IllegalStateException("Unrecognized header: " + header);
-        }
-        String term = STRING.build(rawElements.get(1));
-
-        List<List<Object>> list = (List<List<Object>>) rawElements.get(2);
-        Map<String, Double> entries = new LinkedHashMap<>(list.size());
-        list.forEach(entry -> entries.put(STRING.build(entry.get(1)), DOUBLE.build(entry.get(0))));
-
-        returnTerms.put(term, entries);
-      }
-      return returnTerms;
-    }
-  };
-
-  public static final Builder<TSElement> TIMESERIES_ELEMENT = new Builder<TSElement>() {
-    @Override
-    public TSElement build(Object data) {
-      List<Object> list = (List<Object>) data;
-      if (list == null || list.isEmpty()) return null;
-      return new TSElement(LONG.build(list.get(0)), DOUBLE.build(list.get(1)));
-    }
-  };
-
-  public static final Builder<List<TSElement>> TIMESERIES_ELEMENT_LIST = new Builder<List<TSElement>>() {
-    @Override
-    public List<TSElement> build(Object data) {
-      return ((List<Object>) data).stream().map((pairObject) -> (List<Object>) pairObject)
-          .map((pairList) -> new TSElement(LONG.build(pairList.get(0)),
-              DOUBLE.build(pairList.get(1))))
-          .collect(Collectors.toList());
-    }
-  };
-
-  public static final Builder<List<TSKeyedElements>> TIMESERIES_MRANGE_RESPONSE = new Builder<List<TSKeyedElements>>() {
-    @Override
-    public List<TSKeyedElements> build(Object data) {
-      return ((List<Object>) data).stream().map((tsObject) -> (List<Object>) tsObject)
-          .map((tsList) -> new TSKeyedElements(STRING.build(tsList.get(0)),
-              STRING_MAP_FROM_PAIRS.build(tsList.get(1)),
-              TIMESERIES_ELEMENT_LIST.build(tsList.get(2))))
-          .collect(Collectors.toList());
-    }
-  };
-
-  public static final Builder<List<TSKeyValue<TSElement>>> TIMESERIES_MGET_RESPONSE
-      = new Builder<List<TSKeyValue<TSElement>>>() {
-    @Override
-    public List<TSKeyValue<TSElement>> build(Object data) {
-      return ((List<Object>) data).stream().map((tsObject) -> (List<Object>) tsObject)
-          .map((tsList) -> new TSKeyValue<>(STRING.build(tsList.get(0)),
-              STRING_MAP_FROM_PAIRS.build(tsList.get(1)),
-              TIMESERIES_ELEMENT.build(tsList.get(2))))
-          .collect(Collectors.toList());
-    }
-  };
-
-  public static final Builder<Map.Entry<Long, byte[]>> BLOOM_SCANDUMP_RESPONSE = new Builder<Map.Entry<Long, byte[]>>() {
-    @Override
-    public Map.Entry<Long, byte[]> build(Object data) {
-      List<Object> list = (List<Object>) data;
-      return new KeyValue<>(LONG.build(list.get(0)), BINARY.build(list.get(1)));
-    }
-  };
-
   /**
    * A decorator to implement Set from List. Assume that given List do not contains duplicated
    * values. The resulting set displays the same ordering, concurrency, and performance
    * characteristics as the backing list. This class should be used only for Redis commands which
    * return Set result.
-   * @param <E>
    */
   protected static class SetFromList<E> extends AbstractSet<E> implements Serializable {
     private static final long serialVersionUID = -2850347066962734052L;
