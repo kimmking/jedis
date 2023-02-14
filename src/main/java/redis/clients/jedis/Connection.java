@@ -66,7 +66,7 @@ public class Connection implements Closeable {
     this.memberOf = pool;
   }
 
-  final HostAndPort getHostAndPort() {
+  public final HostAndPort getHostAndPort() {
     return ((DefaultJedisSocketFactory) socketFactory).getHostAndPort();
   }
 

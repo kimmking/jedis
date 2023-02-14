@@ -70,6 +70,10 @@ public class ClusterConnectionProvider implements ConnectionProvider {
     return slot >= 0 ? cache.getSlotNode(slot) : null;
   }
 
+  public Map<Integer, HostAndPort> getSlotNodes() {
+    return cache.getSlotNodes();
+  }
+
   public Connection getConnection(HostAndPort node) {
     return node != null ? cache.setupNodeIfNotExist(node).getResource() : getConnection();
   }
@@ -97,7 +101,7 @@ public class ClusterConnectionProvider implements ConnectionProvider {
           continue;
         }
 
-        jedis.ping();
+        jedis.ping(); // testOnBorrow 打开的话，这里就多ping了一次。 by kimmking 2023-02-14 15:07:54
         return jedis;
 
       } catch (JedisException ex) {

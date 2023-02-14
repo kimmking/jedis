@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.executors.ClusterCommandExecutor;
 import redis.clients.jedis.providers.ClusterConnectionProvider;
+import redis.clients.jedis.util.JedisClusterCRC16;
 
 public class JedisCluster extends UnifiedJedis {
 
@@ -190,6 +191,8 @@ public class JedisCluster extends UnifiedJedis {
     super(provider, maxAttempts, maxTotalRetriesDuration);
   }
 
+  // 下面两个方法可以用来获取集群拓扑 by kimmking 2023-02-14 15:07:54
+
   public Map<String, ConnectionPool> getClusterNodes() {
     return ((ClusterCommandExecutor) executor).provider.getNodes();
   }
@@ -197,4 +200,35 @@ public class JedisCluster extends UnifiedJedis {
   public Connection getConnectionFromSlot(int slot) {
     return ((ClusterCommandExecutor) executor).provider.getConnectionFromSlot(slot);
   }
+
+  // 新加两个方法 by kimmking 2023-02-14 15:07:54
+  // 这几个方法有问题：获取connection需要释放，并且都是从Pool中拿到的，会跟业务线程抢资源池。
+
+  public Connection getConnectionFromKey(String key) {
+    int slot = JedisClusterCRC16.getSlot(key);
+    return getConnectionFromSlot(slot);
+  }
+
+//  public HostAndPort getHostAndPortFromKeyAndConnection(String key) {
+//    try(Connection conn = getConnectionFromKey(key)) {
+//      return conn.getHostAndPort();
+//    }
+//  }
+
+  // 新增不需要经过Connection的方法
+  // 新增方法，直接获取 HostAndPort by kimmking 2023-02-14 15:42:25
+
+  public HostAndPort getNodeFromSlot(int slot) {
+    return ((ClusterCommandExecutor) executor).provider.getNode(slot);
+  }
+
+  public HostAndPort getNodeFromKey(String key) {
+    int slot = JedisClusterCRC16.getSlot(key);
+    return getNodeFromSlot(slot);
+  }
+
+  public Map<Integer, HostAndPort> getSlotNodes() {
+    return ((ClusterCommandExecutor) executor).provider.getSlotNodes();
+  }
+
 }

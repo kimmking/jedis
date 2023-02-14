@@ -18,6 +18,10 @@ public class ConnectionFactory implements PooledObjectFactory<Connection> {
 
   private final JedisSocketFactory jedisSocketFactory;
 
+  public HostAndPort getHostAndPort() {
+    return ((DefaultJedisSocketFactory)this.jedisSocketFactory).getHostAndPort();
+  }
+
   private final JedisClientConfig clientConfig;
 
   public ConnectionFactory(final HostAndPort hostAndPort) {

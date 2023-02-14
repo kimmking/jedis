@@ -268,6 +268,10 @@ public class JedisClusterInfoCache {
     }
   }
 
+  public Map<Integer, HostAndPort> getSlotNodes() {
+      return slotNodes;
+  }
+
   public Map<String, ConnectionPool> getNodes() {
     r.lock();
     try {
