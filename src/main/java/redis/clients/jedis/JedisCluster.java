@@ -236,4 +236,8 @@ public class JedisCluster extends UnifiedJedis {
     return ((ClusterCommandExecutor) executor).provider.getSlotNodes();
   }
 
+  public Map<HostAndPort, Set<Integer>> getNodeSlots() {
+    return ((ClusterCommandExecutor) executor).provider.getNodeSlots();
+  }
+
 }

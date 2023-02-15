@@ -84,6 +84,10 @@ public class ClusterConnectionProvider implements ConnectionProvider {
     return cache.getSlotNodes();
   }
 
+  public Map<HostAndPort, Set<Integer>> getNodeSlots() {
+    return cache.getNodeSlots();
+  }
+
   public Connection getConnection(HostAndPort node) {
     return node != null ? cache.setupNodeIfNotExist(node).getResource() : getConnection();
   }

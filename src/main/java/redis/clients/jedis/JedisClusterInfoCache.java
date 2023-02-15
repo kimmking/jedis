@@ -24,6 +24,8 @@ public class JedisClusterInfoCache {
   private final Map<Integer, ConnectionPool> slots = new HashMap<>();
   private final Map<Integer, HostAndPort> slotNodes = new HashMap<>();
 
+  private final Map<HostAndPort, Set<Integer>> nodeSlots = new HashMap<>();
+
   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
   private final Lock r = rwl.readLock();
   private final Lock w = rwl.writeLock();
@@ -150,6 +152,7 @@ public class JedisClusterInfoCache {
     try {
       this.slots.clear();
       this.slotNodes.clear();
+      this.nodeSlots.clear();
       Set<String> hostAndPortKeys = new HashSet<>();
 
       for (Object slotInfoObj : slotsInfo) {
@@ -226,6 +229,15 @@ public class JedisClusterInfoCache {
       ConnectionPool targetPool = setupNodeIfNotExist(targetNode);
       slots.put(slot, targetPool);
       slotNodes.put(slot, targetNode);
+      Set<Integer> slotSet = null;
+      if (this.nodeSlots.containsKey(targetNode)) {
+        slotSet = this.nodeSlots.get(targetNode);
+        slotSet.add(slot);
+      } else {
+        slotSet = new HashSet<>();
+        slotSet.add(slot);
+        this.nodeSlots.put(targetNode, slotSet);
+      }
     } finally {
       w.unlock();
     }
@@ -238,6 +250,14 @@ public class JedisClusterInfoCache {
       for (Integer slot : targetSlots) {
         slots.put(slot, targetPool);
         slotNodes.put(slot, targetNode);
+      }
+      Set<Integer> slotSet = null;
+      if (this.nodeSlots.containsKey(targetNode)) {
+        slotSet = this.nodeSlots.get(targetNode);
+        slotSet.addAll(targetSlots);
+      } else {
+        slotSet = new HashSet<>(targetSlots);
+        this.nodeSlots.put(targetNode, slotSet);
       }
     } finally {
       w.unlock();
@@ -279,6 +299,10 @@ public class JedisClusterInfoCache {
       return slotNodes;
   }
 
+  public Map<HostAndPort, Set<Integer>> getNodeSlots() {
+    return nodeSlots;
+  }
+
   public Map<String, ConnectionPool> getNodes() {
     r.lock();
     try {
@@ -317,6 +341,7 @@ public class JedisClusterInfoCache {
       nodes.clear();
       slots.clear();
       slotNodes.clear();
+      nodeSlots.clear();
     } finally {
       w.unlock();
     }
@@ -340,4 +365,5 @@ public class JedisClusterInfoCache {
     }
     return slotNums;
   }
+
 }
