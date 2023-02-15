@@ -223,19 +223,34 @@ public class JedisCluster extends UnifiedJedis {
   // 新增不需要经过Connection的方法
   // 新增方法，直接获取 HostAndPort by kimmking 2023-02-14 15:42:25
 
+  // 根据slot获取 HostAndPort
   public HostAndPort getNodeFromSlot(int slot) {
     return ((ClusterCommandExecutor) executor).provider.getNode(slot);
   }
 
+  // 先把key转成slot，再获取HostAndPort
   public HostAndPort getNodeFromKey(String key) {
     int slot = JedisClusterCRC16.getSlot(key);
     return getNodeFromSlot(slot);
   }
 
+  // 获取所有的slot -> node,  这里会有16384个key，HostAndPort看有几个主节点
   public Map<Integer, HostAndPort> getSlotNodes() {
     return ((ClusterCommandExecutor) executor).provider.getSlotNodes();
   }
 
+  // 根据slot获取HostAndPort，这里不需要从connection去拿信息
+  public HostAndPort getNode(int slot) {
+    return getSlotNodes().get(slot);
+  }
+
+  // 根据key，转成slot，再调用getNode方法
+  public HostAndPort getNode(String key) {
+    int slot = JedisClusterCRC16.getSlot(key);
+    return getSlotNodes().get(slot);
+  }
+
+  // 获取每个节点HostAndPort上的所有slot组成的集合，例如3主的话，每个Set有16384/3个slot
   public Map<HostAndPort, Set<Integer>> getNodeSlots() {
     return ((ClusterCommandExecutor) executor).provider.getNodeSlots();
   }
