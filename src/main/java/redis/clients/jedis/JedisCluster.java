@@ -256,8 +256,8 @@ public class JedisCluster extends UnifiedJedis {
     return ((ClusterCommandExecutor) executor).provider.getNodeSlots();
   }
 
-  public List<HostAndPort> getUnavailableNodes() {
-    return ((ClusterCommandExecutor) executor).provider.getUnavailableNodes();
+  public Set<HostAndPort> getUnavailableNodes() {
+    return Collections.unmodifiableSet(((ClusterCommandExecutor) executor).provider.getUnavailableNodes());
   }
 
 }

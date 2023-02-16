@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -27,7 +27,7 @@ public class JedisClusterInfoCache {
 
   private final Map<HostAndPort, Set<Integer>> nodeSlots = new HashMap<>();
 
-  public final List<HostAndPort> unavailableNodes = new CopyOnWriteArrayList<>();
+  public final Set<HostAndPort> unavailableNodes = new CopyOnWriteArraySet<>();
 
   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
   private final Lock r = rwl.readLock();
@@ -318,8 +318,8 @@ public class JedisClusterInfoCache {
     }
   }
 
-  public List<HostAndPort> getUnavailableNodes() {
-    return Collections.unmodifiableList(this.unavailableNodes);
+  public Set<HostAndPort> getUnavailableNodes() {
+    return this.unavailableNodes;
   }
 
   public List<ConnectionPool> getShuffledNodesPool() {

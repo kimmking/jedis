@@ -27,7 +27,7 @@ public class TestNodes {
         DefaultJedisClientConfig config = DefaultJedisClientConfig.builder().connectionTimeoutMillis(1000)
                 .socketTimeoutMillis(1000).timeoutMillis(1000).build();
 
-        JedisCluster cluster = new JedisCluster(new HashSet<>(hosts), config, 3, Duration.ofMillis(2000));
+        JedisCluster cluster = new JedisCluster(new HashSet<>(hosts), config, 3, Duration.ofMillis(6000));
 
         int c = 0;
         while (c != 'q') {

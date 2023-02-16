@@ -25,7 +25,6 @@ public class ClusterCommandExecutor implements CommandExecutor {
   protected final Duration maxTotalRetriesDuration;
 
   protected final AtomicInteger threadId = new AtomicInteger();
-
   protected final ScheduledExecutorService checkService;
 
   public ClusterCommandExecutor(ClusterConnectionProvider provider, int maxAttempts,
@@ -44,7 +43,7 @@ public class ClusterCommandExecutor implements CommandExecutor {
 
   private void schedule() {
     System.out.println("schedule at " + System.currentTimeMillis() + "...");
-    List<HostAndPort> unavailableNodes = Collections.unmodifiableList(provider.getUnavailableNodes());
+    Set<HostAndPort> unavailableNodes = Collections.unmodifiableSet(provider.getUnavailableNodes());
     for(HostAndPort hap : unavailableNodes) {
       System.out.println("check for [" + hap + "]...");
       if(check(hap)) {
@@ -149,16 +148,16 @@ public class ClusterCommandExecutor implements CommandExecutor {
   }
 
   private JedisClusterOperationException processNodeDown(Exception lastException, JedisClusterOperationException jcoe, ClusterCommandArguments args) {
-
+    jcoe.addSuppressed(lastException);
     final int slot = args.getCommandHashSlot();
     if(slot >= 0) {
       HostAndPort hap = provider.getNode(slot);
-      List<HostAndPort> unavailableNodes = provider.getUnavailableNodes();
+      Set<HostAndPort> unavailableNodes = provider.getUnavailableNodes();
       if (!unavailableNodes.contains(hap)) {
         unavailableNodes.add(hap);
       }
+      System.out.println("Isolate node:" + hap.toString());
     }
-    jcoe.addSuppressed(lastException);
     return jcoe;
   }
 
