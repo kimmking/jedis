@@ -158,4 +158,8 @@ public class ClusterConnectionProvider implements ConnectionProvider {
   public Map<String, ConnectionPool> getConnectionMap() {
     return Collections.unmodifiableMap(getNodes());
   }
+
+  public List<HostAndPort> getUnavailableNodes() {
+    return cache.unavailableNodes;
+  }
 }

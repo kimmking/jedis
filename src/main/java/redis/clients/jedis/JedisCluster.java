@@ -2,6 +2,7 @@ package redis.clients.jedis;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -253,6 +254,10 @@ public class JedisCluster extends UnifiedJedis {
   // 获取每个节点HostAndPort上的所有slot组成的集合，例如3主的话，每个Set有16384/3个slot
   public Map<HostAndPort, Set<Integer>> getNodeSlots() {
     return ((ClusterCommandExecutor) executor).provider.getNodeSlots();
+  }
+
+  public List<HostAndPort> getUnavailableNodes() {
+    return ((ClusterCommandExecutor) executor).provider.getUnavailableNodes();
   }
 
 }

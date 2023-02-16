@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -25,6 +26,8 @@ public class JedisClusterInfoCache {
   private final Map<Integer, HostAndPort> slotNodes = new HashMap<>();
 
   private final Map<HostAndPort, Set<Integer>> nodeSlots = new HashMap<>();
+
+  public final List<HostAndPort> unavailableNodes = new CopyOnWriteArrayList<>();
 
   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
   private final Lock r = rwl.readLock();
@@ -180,6 +183,8 @@ public class JedisClusterInfoCache {
         }
       }
 
+      System.out.println("discoverClusterSlots:=>" + this.nodeSlots.keySet());
+
       // Remove dead nodes according to the latest query
       Iterator<Entry<String, ConnectionPool>> entryIt = nodes.entrySet().iterator();
       while (entryIt.hasNext()) {
@@ -251,6 +256,7 @@ public class JedisClusterInfoCache {
         slots.put(slot, targetPool);
         slotNodes.put(slot, targetNode);
       }
+      System.out.println("assignSlotsToNode:=>" + targetNode + ",slotsSize" + targetSlots.size());
       Set<Integer> slotSet = null;
       if (this.nodeSlots.containsKey(targetNode)) {
         slotSet = this.nodeSlots.get(targetNode);
@@ -310,6 +316,10 @@ public class JedisClusterInfoCache {
     } finally {
       r.unlock();
     }
+  }
+
+  public List<HostAndPort> getUnavailableNodes() {
+    return Collections.unmodifiableList(this.unavailableNodes);
   }
 
   public List<ConnectionPool> getShuffledNodesPool() {
